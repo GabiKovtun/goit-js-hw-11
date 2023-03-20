@@ -14,7 +14,6 @@ const instance = axios.create({
   baseURL: 'https://pixabay.com/api',
 });
 let name;
-
 let page = 1;
 let pages; 
 
@@ -22,13 +21,12 @@ loadBtnEl.style.display = 'none';
 
 async function getPicture() {
   try {
-    const {data} = await instance.get(
+      const {data} = await instance.get(
       `/?key=${KEY}&q=${name}&image_type=photo&orientation=horizontal&safesearch=true&per_page=40&page=${page}`
     );
-    console.log(data);
     pages = data.totalHits / 40;
-    console.log(pages);  
-      return data;
+    return data;
+      
   } catch (error) {
     console.log(error);
   }
@@ -38,10 +36,12 @@ searchFormEl.addEventListener('submit', onSearch);
 
 function onSearch(event) {
   event.preventDefault();
-  galleryEl.innerHTML = ' ';
+  galleryEl.innerHTML = '';
   name = inputEl.value.trim();
+  page = 1;
 
-  if (name !== '') {
+  if (name !== ''){
+    page = 1;
     addPictures();
       } else {
     return Notiflix.Notify.failure(
@@ -51,7 +51,7 @@ function onSearch(event) {
 }
 
 function renderPicture(array) {
-  const markup = array
+      const markup = array
     .map(item => {
       return `
     <a class = "gallery__item" href="${item.largeImageURL}" target="_blank"  rel="noopener">
@@ -89,11 +89,16 @@ let lightbox = new SimpleLightbox('.gallery a', {
 });
 
 async function addPictures() {
-  const pictureInfo = await getPicture();
-  console.log({ pictureInfo });
-  renderPicture(pictureInfo.hits);
+   const pictureInfo = await getPicture();
+   if (pictureInfo.hits.length !== 0) {
+    renderPicture(pictureInfo.hits);
+  console.log(pictureInfo.hits);
   loadBtnEl.style.display = 'block';
-}
+   } else {
+    return Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+   }
+  
+} 
 
 loadBtnEl.addEventListener('click', onLoad)
 
@@ -104,6 +109,7 @@ function onLoad() {
     addPictures()}
     else{
       loadBtnEl.style.display = 'none';
-      Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
+      return Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
           }
   }
+  
